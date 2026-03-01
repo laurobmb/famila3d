@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Calc | Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #e63946;
+            --bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-main: #2b2d42;
+            --text-sub: #8d99ae;
+            --border: #edf2f4;
+            --accent: #457b9d;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            padding: 15px; /* Reduzido levemente o padding externo */
+            box-sizing: border-box;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+            box-sizing: border-box;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        p.subtitle {
+            color: var(--text-sub);
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .full-width { grid-column: span 2; }
+
+        .group {
+            margin-bottom: 5px; /* Ajuste para não somar com o gap do grid */
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: #fdfdfd;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+            /* Evita zoom automático no iOS ao clicar no input */
+            appearance: none; 
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(69, 123, 157, 0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--text-main);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            margin-top: 15px;
+        }
+
+        button:hover {
+            background-color: #1a1c2c;
+            transform: translateY(-1px);
+        }
+
+        .results {
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 2px dashed var(--border);
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+        
+        .result-row.subtotal {
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .result-row.total {
+            background: var(--bg);
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 15px;
+        }
+
+        .total span:last-child {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            background: #eef2f3;
+            padding: 2px 8px;
+            border-radius: 6px;
+            color: var(--accent);
+        }
+
+        /* Otimizações para Mobile (Telas menores que 600px) */
+        @media (max-width: 600px) {
+            .form-grid {
+                grid-template-columns: 1fr; /* Muda para 1 coluna */
+                gap: 12px;
+            }
+            
+            .full-width { 
+                grid-column: span 1; /* Reseta o span no mobile */
+            }
+
+            .card {
+                padding: 25px 20px; /* Reduz o padding para ganhar tela */
+                border-radius: 16px;
+            }
+
+            h2 {
+                font-size: 1.3rem; /* Título ligeiramente menor */
+            }
+
+            .result-row {
+                font-size: 0.9rem; /* Ajuste na fonte dos resultados */
+            }
+            
+            .total span:last-child {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <img src="/static/logo.jpg" alt="Logo" class="logo">
+                <h2>Calculadora 3D</h2>
+                <p class="subtitle">Gestão de Custos e Markup</p>
+            </div>
+            
+            <form method="POST">
+                <div class="form-grid">
+                    <div class="group full-width">
+                        <label>Preço do Filamento (R$/kg)</label>
+                        <input type="number" step="0.01" inputmode="decimal" name="filament_price" value="{{.Input.FilamentPrice}}" required>
+                    </div>
+                    <div class="group">
+                        <label>Peso (g)</label>
+                        <input type="number" step="0.1" inputmode="decimal" name="weight" value="{{.Input.Weight}}" required>
+                    </div>
+                    <div class="group">
+                        <label>Tempo (Horas)</label>
+                        <input type="number" step="0.1" inputmode="decimal" name="hours" value="{{.Input.Hours}}" required>
+                    </div>
+                    <div class="group">
+                        <label>Energia (R$/h)</label>
+                        <input type="number" step="0.01" inputmode="decimal" name="light_price" value="{{.Input.LightPrice}}" required>
+                    </div>
+                    <div class="group">
+                        <label>Markup <span class="badge">Multiplicador</span></label>
+                        <input type="number" step="0.1" inputmode="decimal" name="markup" value="{{.Input.Markup}}" required>
+                    </div>
+                </div>
+                <button type="submit">Gerar Orçamento</button>
+            </form>
+
+            {{if .Calculated}}
+            <div class="results">
+                <div class="result-row">
+                    <span>Valor Filamento</span>
+                    <span>R$ {{printf "%.2f" .Result.FilamentCost}}</span>
+                </div>
+                <div class="result-row">
+                    <span>Valor Luz de Horas</span>
+                    <span>R$ {{printf "%.2f" .Result.LightCost}}</span>
+                </div>
+                
+                <div class="result-row subtotal">
+                    <span>Valor de Custo 1</span>
+                    <span>R$ {{printf "%.2f" .Result.Cost1}}</span>
+                </div>
+
+                <div class="result-row">
+                    <span>Valor de Custo 2 falhas+imp</span>
+                    <span>R$ {{printf "%.2f" .Result.Cost2}}</span>
+                </div>
+                
+                <div class="result-row total">
+                    <span><strong>Valor de Venda</strong></span>
+                    <span>R$ {{printf "%.2f" .Result.SalePrice}}</span>
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </div>
+</body>
+</html>
