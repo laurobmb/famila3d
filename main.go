@@ -44,6 +44,14 @@ func (rec *responseRecorder) WriteHeader(statusCode int) {
 	rec.ResponseWriter.WriteHeader(statusCode)
 }
 
+// Intercepta o Write para garantir que captures status 200 implícitos do Go
+func (rec *responseRecorder) Write(b []byte) (int, error) {
+	if rec.statusCode == 0 {
+		rec.statusCode = http.StatusOK
+	}
+	return rec.ResponseWriter.Write(b)
+}
+
 // loggingMiddleware registra os detalhes de cada requisição HTTP
 func loggingMiddleware(logger *slog.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -78,7 +86,6 @@ func main() {
 		},
 	}
 
-	// Utilizando o ServeMux nativo para gerenciar as rotas
 	mux := http.NewServeMux()
 
 	// Rota de arquivos estáticos
@@ -97,11 +104,57 @@ func main() {
 		}
 
 		if r.Method == http.MethodPost {
-			data.Input.FilamentPrice, _ = strconv.ParseFloat(r.FormValue("filament_price"), 64)
-			data.Input.Weight, _ = strconv.ParseFloat(r.FormValue("weight"), 64)
-			data.Input.Hours, _ = strconv.ParseFloat(r.FormValue("hours"), 64)
-			data.Input.LightPrice, _ = strconv.ParseFloat(r.FormValue("light_price"), 64)
-			data.Input.Markup, _ = strconv.ParseFloat(r.FormValue("markup"), 64)
+			// Limite de 1MB para prevenir OOM
+			r.Body = http.MaxBytesReader(w, r.Body, 1048576)
+
+			err := r.ParseForm()
+			if err != nil {
+				http.Error(w, "Requisição inválida ou muito grande", http.StatusBadRequest)
+				return
+			}
+
+			// Verifica se algum campo excedeu 10 caracteres
+			for _, val := range r.PostForm {
+				if len(val[0]) > 10 {
+					http.Error(w, "Valor de input excede o limite permitido (10 caracteres)", http.StatusBadRequest)
+					return
+				}
+			}
+			
+			// Função auxiliar para converter e validar os inputs numéricos de forma segura
+			parseFloatSafe := func(key string) (float64, bool) {
+				valStr := r.FormValue(key)
+				if valStr == "" {
+					return 0, true // Campo vazio, ignora se não for obrigatório na sua regra
+				}
+				valFloat, err := strconv.ParseFloat(valStr, 64)
+				if err != nil {
+					return 0, false
+				}
+				return valFloat, true
+			}
+
+			var ok bool
+			if data.Input.FilamentPrice, ok = parseFloatSafe("filament_price"); !ok {
+				http.Error(w, "Preço do filamento inválido", http.StatusBadRequest)
+				return
+			}
+			if data.Input.Weight, ok = parseFloatSafe("weight"); !ok {
+				http.Error(w, "Peso inválido", http.StatusBadRequest)
+				return
+			}
+			if data.Input.Hours, ok = parseFloatSafe("hours"); !ok {
+				http.Error(w, "Horas inválidas", http.StatusBadRequest)
+				return
+			}
+			if data.Input.LightPrice, ok = parseFloatSafe("light_price"); !ok {
+				http.Error(w, "Preço da luz inválido", http.StatusBadRequest)
+				return
+			}
+			if data.Input.Markup, ok = parseFloatSafe("markup"); !ok {
+				http.Error(w, "Markup inválido", http.StatusBadRequest)
+				return
+			}
 
 			fCost := (data.Input.FilamentPrice / 1000) * data.Input.Weight
 			lCost := data.Input.Hours * data.Input.LightPrice
@@ -118,7 +171,7 @@ func main() {
 			}
 			data.Calculated = true
 
-			// Log de negócio: Registra quando um orçamento foi gerado com sucesso
+			// Log estruturado de negócio
 			slog.Info("Orçamento calculado",
 				slog.Float64("peso_g", data.Input.Weight),
 				slog.Float64("tempo_h", data.Input.Hours),
@@ -138,7 +191,6 @@ func main() {
 		}
 	})
 
-	// Envolve o multiplexador de rotas com o middleware de log
 	loggedMux := loggingMiddleware(logger, mux)
 
 	porta := "8080"

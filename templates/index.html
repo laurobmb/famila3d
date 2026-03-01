@@ -212,23 +212,23 @@
                 <div class="form-grid">
                     <div class="group full-width">
                         <label>Preço do Filamento (R$/kg)</label>
-                        <input type="number" step="0.01" inputmode="decimal" name="filament_price" value="{{.Input.FilamentPrice}}" required>
+                        <input type="number" step="0.01" inputmode="decimal" name="filament_price" value="{{.Input.FilamentPrice}}" oninput="if(this.value.length > 10) this.value = this.value.slice(0, 10);" required>
                     </div>
                     <div class="group">
                         <label>Peso (g)</label>
-                        <input type="number" step="0.1" inputmode="decimal" name="weight" value="{{.Input.Weight}}" required>
+                        <input type="number" step="0.1" inputmode="decimal" name="weight" value="{{.Input.Weight}}" oninput="if(this.value.length > 10) this.value = this.value.slice(0, 10);" required>
                     </div>
                     <div class="group">
                         <label>Tempo (Horas)</label>
-                        <input type="number" step="0.1" inputmode="decimal" name="hours" value="{{.Input.Hours}}" required>
+                        <input type="number" step="0.1" inputmode="decimal" name="hours" value="{{.Input.Hours}}" oninput="if(this.value.length > 10) this.value = this.value.slice(0, 10);" required>
                     </div>
                     <div class="group">
                         <label>Energia (R$/h)</label>
-                        <input type="number" step="0.01" inputmode="decimal" name="light_price" value="{{.Input.LightPrice}}" required>
+                        <input type="number" step="0.01" inputmode="decimal" name="light_price" value="{{.Input.LightPrice}}" oninput="if(this.value.length > 10) this.value = this.value.slice(0, 10);" required>
                     </div>
                     <div class="group">
                         <label>Markup <span class="badge">Multiplicador</span></label>
-                        <input type="number" step="0.1" inputmode="decimal" name="markup" value="{{.Input.Markup}}" required>
+                        <input type="number" step="0.1" inputmode="decimal" name="markup" value="{{.Input.Markup}}" oninput="if(this.value.length > 10) this.value = this.value.slice(0, 10);" required>
                     </div>
                 </div>
                 <button type="submit">Gerar Orçamento</button>
