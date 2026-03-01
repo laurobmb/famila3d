@@ -1,0 +1,49 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main # Altere para 'master' se for o caso do seu repositório
+  workflow_dispatch: # Permite disparar o deploy manualmente pela interface do GitHub
+
+# Permissões necessárias para o GITHUB_TOKEN fazer o deploy no ambiente do Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Garante que apenas um deploy ocorra por vez
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar GitHub Pages
+        uses: actions/configure-pages@v4
+
+      - name: Preparar diretório public
+        run: |
+          mkdir public
+          # Copia o HTML estático renomeando para o padrão do Pages
+          cp templates/index.github.pages.html public/index.html
+          # Copia a pasta static (onde está sua logo) para a raiz do public
+          cp -r static public/
+
+      - name: Upload dos artefatos (Arquivos estáticos)
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Altera o path de '.' para 'public'
+          path: 'public'
+
+      - name: Deploy para o GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
